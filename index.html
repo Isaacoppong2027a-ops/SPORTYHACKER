@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sporty Hacker - Instant Virtuals</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <!-- BACKGROUND CANVAS FOR MOVING & GLOWING RED PARTICLES -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- EXPIRED ACCESS SCREEN -->
+  <div id="step-expired" class="expired-container hidden">
+    <div class="expired-card">
+      <div class="expired-icon"></div>
+      <h1>ACCESS EXPIRED</h1>
+      <p>Your access period has ended. Contact support to renew your subscription.</p>
+      <a href="https://wa.me/233536253729" target="_blank" class="btn-renew">Contact Support to Renew</a>
+    </div>
+  </div>
+
+  <!-- SPORTY HACKER SIGNATURE RED HEADER -->
+  <header class="sporty-header">
+    <div class="sporty-nav-container">
+      <div class="sporty-logo-group">
+        <span class="sporty-logo-text">SportyHacker</span>
+      </div>
+      <div class="sporty-header-right">
+        <span class="header-search-icon"></span>
+        <!-- AUTH BUTTONS (SHOWN BEFORE LOGIN) -->
+        <div class="auth-buttons" id="nav-auth-area">
+          <button class="btn-login" onclick="openAuthModal('login')">Log In</button>
+          <button class="btn-signup" onclick="openAuthModal('signup')">Sign Up</button>
+        </div>
+        <!-- USER PROFILE BADGE (SHOWN AFTER LOGIN) -->
+        <div class="sporty-balance-badge hidden" id="nav-balance-area">
+          <div class="user-avatar-circle">👤</div>
+          <span class="balance-amount">USER</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOP RUNNING TICKER -->
+  <div class="top-ticker-bar">
+    <div class="ticker-wrapper">
+      <div class="ticker-item"><span class="ticker-highlight">Won GHS 1,028.79</span> ARS vs MCI</div>
+      <div class="ticker-item"><span class="ticker-highlight">Won GHS 1,052.98</span> CHE vs LIV</div>
+      <div class="ticker-item"><span class="ticker-highlight">Won GHS 2,430.50</span> MUN vs TOT</div>
+      <div class="ticker-item"><span class="ticker-highlight">Won GHS 890.00</span> RMA vs BAR</div>
+    </div>
+  </div>
+
+  <!-- STEP 0: LANDING PAGE HERO -->
+  <div id="step-landing" class="landing-container">
+    <div class="hero-content">
+      <div class="badge-live">
+        <span class="dot"></span> LIVE AI PREDICTIONS
+      </div>
+      <h1 class="hero-title">SPORTY<br><span>HACKER</span></h1>
+      <h3 class="hero-subtitle">Instant Virtuals Engine v2.4</h3>
+      <p class="hero-desc">
+        Unlock elite winning streaks with advanced neural-network AI predictions. Upload your game slip, let our cutting-edge algorithm analyze the stats instantly, and cash out with confidence every single day.
+      </p>
+      <div class="hero-cta-group">
+        <button class="btn-get-started" onclick="openAuthModal('signup')">GET STARTED +</button>
+        <a href="#reviews-section" class="btn-see-reviews">See Reviews &gt;</a>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <h2>20,656+</h2>
+          <p>WINNERS</p>
+        </div>
+        <div class="stat-item">
+          <h2>GHS 75K+</h2>
+          <p>TOTAL USE</p>
+        </div>
+        <div class="stat-item">
+          <h2>99%</h2>
+          <p>WIN RATE</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div id="auth-modal" class="modal-overlay hidden">
+    <div class="sporty-modal">
+      <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      <div class="modal-tabs">
+        <button type="button" id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Log In</button>
+        <button type="button" id="tab-signup" class="tab-btn" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <div class="country-selector">
+        <span class="flag"></span>
+        <span class="country-name">Ghana</span>
+        <span class="change-link">Change &gt;</span>
+      </div>
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div id="fullname-field-group" class="input-field-group hidden">
+          <input type="text" id="user-fullname" placeholder="Full Name">
+        </div>
+        <div class="phone-input-group">
+          <span class="country-code">+233</span>
+          <input type="tel" id="user-phone" placeholder="Enter phone number" required>
+        </div>
+        <div class="password-input-group">
+          <input type="password" id="user-pass" placeholder="Password" required>
+        </div>
+
+        <!-- 18+ AGE CONFIRMATION CHECKBOX -->
+        <div id="age-checkbox-group" class="age-checkbox-container hidden">
+          <label class="checkbox-label">
+            <input type="checkbox" id="age-verify-checkbox">
+            <span class="checkmark-text">I am 18 years of age or older</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-sporty-submit" id="auth-submit-btn">Login</button>
+      </form>
+      <div class="modal-footer-links">
+        <a href="javascript:void(0)" class="link-green" onclick="handleForgotPassword()">Forgot Password?</a>
+        <a href="javascript:void(0)" class="link-green" id="toggle-auth-mode" onclick="toggleAuthMode()">Create New Account</a>
+      </div>
+      <div class="modal-divider"><span>Or</span></div>
+      <p class="reactivate-text">
+        To deactivate or reactivate your account <a href="https://wa.me/233535262102" target="_blank" class="link-green">click here</a>.
+      </p>
+    </div>
+  </div>
+
+  <!-- SMOOTH 5-SECOND LOADING SPLASH SCREEN -->
+  <div id="step-loading" class="splash-container hidden">
+    <div class="splash-content">
+      <div class="gaming-loader-ring">
+        <div class="loader-inner-icon"></div>
+      </div>
+      <h1 class="splash-logo">SPORTY<span>HACKER</span></h1>
+      <p class="splash-domain">Instant Virtuals Engine v2.4</p>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="loading-info-row">
+        <span class="loading-status" id="loading-status">Connecting to secure server...</span>
+        <span class="loading-percent" id="loading-percent">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP DASHBOARD -->
+  <div id="app-wrapper" class="hidden">
+    <!-- VIEW 1: GAMES HUB -->
+    <div id="games-hub-view" class="sporty-main-container">
+      <div class="search-filter-bar">
+        <div class="search-input-wrapper">
+          <span class="icon"></span>
+          <input type="text" placeholder="Search games" readonly>
+        </div>
+        <div class="home-dropdown-btn">
+          <span></span> Home <span class="arrow"></span>
+        </div>
+      </div>
+      <div class="sporty-hero-banner">
+        <div class="banner-left-content">
+          <span class="banner-sub-tag">FIRST 5 DAYS</span>
+          <h2 class="banner-main-title">REWARDS</h2>
+          <p class="banner-desc">Get 10% back on hourly loss on 1<sup>st</sup> day & Lucky Wheel Spins on next 4 days!</p>
+          <button class="banner-play-btn" onclick="launchInstantVirtualsGame()">PLAY NOW</button>
+        </div>
+        <div class="banner-right-graphics">
+          <div class="floating-badge-art"></div>
+        </div>
+      </div>
+      <div class="games-section-header">
+        <h3>Top 6 Games in Ghana</h3>
+      </div>
+      <div class="games-grid">
+        <div class="sporty-game-card" onclick="handleGameClick('Aviator')">
+          <div class="ribbon-badge">1</div>
+          <div class="heart-icon"></div>
+          <div class="card-art aviator-art">
+            <div class="plane-icon"></div>
+            <div class="game-title aviator-title">Aviator</div>
+          </div>
+        </div>
+        <div class="sporty-game-card" onclick="handleGameClick('Spin Da Bottle')">
+          <div class="ribbon-badge">2</div>
+          <div class="heart-icon"></div>
+          <div class="card-art bottle-art">
+            <div class="bottle-shape"></div>
+            <div class="game-title bottle-title">
+              <span>SPIN DA'</span>
+              <span>BOTTLE</span>
+            </div>
+          </div>
+        </div>
+        <div class="sporty-game-card active-virtuals-card" onclick="launchInstantVirtualsGame()">
+          <div class="ribbon-badge">3</div>
+          <div class="heart-icon"></div>
+          <div class="card-art virtuals-art">
+            <div class="ai-badge-tag">AI PREDICTOR</div>
+            <div class="game-title virtuals-title">
+              <span>INSTANT</span>
+              <span>VIRTUALS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="winning-ticket-card" onclick="launchInstantVirtualsGame()">
+        <div class="ticket-header-tag">LIVE WINNING PROOF</div>
+        <div class="winning-trophy-icon"></div>
+        <h2 class="winning-amount">GHS 18,660.10</h2>
+        <p class="ticket-source">Verified Win from SportyBet Instant Virtuals</p>
+        <div class="ticket-footer-row">
+          <span>Status: <strong style="color: #22c55e;">PAID OUT</strong></span>
+          <button class="btn-view-ticket">Tap to Unlock AI &gt;</button>
+        </div>
+      </div>
+
+      <!-- EMBEDDED SPORTYBET WINNING TICKET CARD -->
+      <div class="sportybet-mock-ticket" onclick="launchInstantVirtualsGame()">
+        <div class="mock-ticket-topbar">
+          <span class="mock-ticket-title">Ticket Details</span>
+          <span class="mock-ticket-payout">GHS 21,545.90</span>
+        </div>
+        <div class="mock-ticket-meta">
+          <span>Instant Football Ticket ID: 490939</span>
+          <span>10/24, 23:34</span>
+        </div>
+        <div class="mock-ticket-body">
+          <div class="mock-ticket-header-row">
+            <span class="mock-ticket-type">⚽ Multiple</span>
+            <span class="mock-ticket-status">🏆 Won</span>
+          </div>
+          <div class="mock-ticket-stats">
+            <div class="mock-stat-row"><span>Total Return</span><span class="green-text">GHS 1,843.12</span></div>
+            <div class="mock-stat-row"><span>Total Stake</span><span>100.00</span></div>
+            <div class="mock-stat-row"><span>Total Odds</span><span>17.72</span></div>
+            <div class="mock-stat-row"><span>Total Bonus</span><span>70.89</span></div>
+          </div>
+          <div class="mock-congrats-banner">
+            <span>⚡ Wow, congratulations! Brag about your win!</span>
+            <button class="mock-showoff-btn">Show Off</button>
+          </div>
+          <div class="mock-match-item">
+            <div class="mock-match-teams">LIV vs FUL <span class="mock-league">League: England</span></div>
+            <div class="mock-pick-box">
+              <span>Pick: Home @2.31</span>
+              <span class="mock-won-badge">Won ✔</span>
+            </div>
+          </div>
+          <div class="mock-match-item">
+            <div class="mock-match-teams">MUN vs ARS <span class="mock-league">League: England</span></div>
+            <div class="mock-pick-box">
+              <span>Pick: Away @2.74</span>
+              <span class="mock-won-badge">Won ✔</span>
+            </div>
+          </div>
+          <div class="mock-match-item">
+            <div class="mock-match-teams">BOU vs CHE <span class="mock-league">League: England</span></div>
+            <div class="mock-pick-box">
+              <span>Pick: Home @2.80</span>
+              <span class="mock-won-badge">Won ✔</span>
+            </div>
+          </div>
+          <div class="mock-ticket-id-footer">Bet ID: TiuR5rk9liugXfXQQGz3</div>
+        </div>
+      </div>
+
+      <!-- OFFICIAL GAMING PARTNERS SECTION -->
+      <div class="games-section-header" style="margin-top: 22px;">
+        <h3>Official Gaming Partners</h3>
+      </div>
+      <div class="games-grid">
+        <div class="sporty-game-card">
+          <div class="ribbon-badge">★</div>
+          <div class="card-art" style="background: linear-gradient(180deg, #1e3a8a, #0f172a); border: 1px solid #3b82f6;">
+            <div class="ai-badge-tag" style="background: #2563eb;">PARTNER</div>
+            <div class="game-title" style="font-size: 11px; font-weight: 900; color: #93c5fd; font-style: italic;">PLAYSTATION</div>
+          </div>
+        </div>
+        <div class="sporty-game-card">
+          <div class="ribbon-badge">★</div>
+          <div class="card-art" style="background: linear-gradient(180deg, #7c2d12, #431407); border: 1px solid #ea580c;">
+            <div class="ai-badge-tag" style="background: #ea580c;">PROVIDER</div>
+            <div class="game-title" style="font-size: 11px; font-weight: 900; color: #fdba74; font-style: italic;">PLAYSON</div>
+          </div>
+        </div>
+        <div class="sporty-game-card">
+          <div class="ribbon-badge">★</div>
+          <div class="card-art" style="background: linear-gradient(180deg, #065f46, #022c22); border: 1px solid #059669;">
+            <div class="ai-badge-tag" style="background: #059669;">STUDIO</div>
+            <div class="game-title" style="font-size: 11px; font-weight: 900; color: #6ee7b7; font-style: italic;">SMARTSOFT</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW 2: GAME LAUNCHER -->
+    <div id="game-launcher-view" class="sporty-main-container hidden">
+      <div class="game-launch-topbar">
+        <button class="btn-back-games" onclick="returnToGamesHub()">&larr; Back to Lobby</button>
+        <span class="launched-game-title">Instant Virtuals (AI Predictor)</span>
+      </div>
+      <!-- STEP 1: PAYMENT & VERIFICATION -->
+      <div id="step-verification">
+        <div class="card">
+          <div class="card-title">
+            <span>STEP 1: PAYMENT REQUIRED</span>
+            <span class="badge-pay">SEND GHC 200 TO ACCESS THE SITES</span>
+          </div>
+          <p class="sub-text">Send payment to the Mobile Money account below to unlock access.</p>
+          <div class="payment-details">
+            <div class="payment-row"><span>Amount:</span><span class="payment-value">GHC 200</span></div>
+            <div class="payment-row"><span>MoMo Number:</span><span class="payment-value">0205283892</span></div>
+            <div class="payment-row"><span>Account Name:</span><span class="payment-value">JUSTICE ODURO</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">STEP 2: VERIFICATION</div>
+          <p class="sub-text">Enter your Transaction ID below to access the site and make sure it is correct ID to avoid banned / Don't leak the site after winning to also avoid violation, enjoy your game:</p>
+          <input type="password" id="tx-input" placeholder="Enter Transaction ID...">
+          <button class="btn" id="verify-btn" onclick="verifyTransaction()">VERIFY PAYMENT</button>
+          <div id="invalid-error" class="support-box hidden" style="margin-top: 12px; text-align: center;">
+            <p class="err-text" style="color: #ef4444; font-weight: 800; font-size: 13px; margin-bottom: 4px;">Invalid Transaction ID!</p>
+            <a href="https://wa.me/233530985143" target="_blank" style="color: #60a5fa; font-size: 12px; text-decoration: underline;">Click here to contact admins on WhatsApp</a>
+          </div>
+        </div>
+      </div>
+      <!-- STEP 2: SCANNER -->
+      <div id="step-scanner" class="hidden">
+        <div class="card">
+          <div class="card-title">
+            <span>Upload Screenshot</span>
+            <span id="uploads-remaining">3/3 Uploads Left</span>
+          </div>
+          <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+          <div class="upload-box" id="upload-box" onclick="triggerFileInput()">
+            <div class="scanner-line purple-laser" id="scanner-line"></div>
+            <img id="preview-img" style="display: none;">
+            <p id="upload-placeholder">Tap to Upload Screenshot Image</p>
+          </div>
+          <div id="screenshot-error" class="hidden" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center;">
+            <p style="color: #ef4444; font-size: 12px; font-weight: 800;">Invalid Screenshot! Please upload a valid match list screenshot.</p>
+          </div>
+          <div id="status-text" class="status-indicator hidden">Scanning complete!</div>
+          <button class="btn" id="scan-btn" onclick="handleButtonClick()" disabled>Generate Prediction</button>
+        </div>
+        <div id="results-card" class="card hidden">
+          <div class="card-title">Detected Screenshot Matches (1x2)</div>
+          <div id="match-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS SECTION -->
+  <section id="reviews-section" class="testimonials">
+    <div class="testimonials-header">
+      <span class="testimonials-badge">COMMUNITY FEEDBACK</span>
+      <h2>WHAT USERS ARE SAYING</h2>
+    </div>
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"Sporty Hacker AI predicted 3 matches in a row for me. Cashed out GHS 18,660 this morning in Accra! Truly a game changer."</p>
+        <div class="user">
+          <div class="user-avatar">K</div>
+          <div><strong>Kwame B.</strong><span>Accra, Ghana</span></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"At first I doubted, but after paying the GHC 200 and uploading my instant virtuals screenshot, the accuracy is crazy. 99% win rate is real!"</p>
+        <div class="user">
+          <div class="user-avatar">J</div>
+          <div><strong>Yaw M.</strong><span>Kumasi, Ghana</span></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p>"Best decision ever. Fast server, clean SportyBet interface, and instant results on my phone. Big ups to the admins!"</p>
+        <div class="user">
+          <div class="user-avatar">E</div>
+          <div><strong>Ekow T.</strong><span>Takoradi, Ghana</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="premium-footer">
+    <div class="footer-logo">
+      <span class="logo-icon">⚡</span>
+      <h2>SPORTY <span>HACKER</span></h2>
+    </div>
+    <p>&copy; 2026 SPORTY HACKER VIRTUALS. All rights reserved.</p>
+  </footer>
+
+  <!-- FLOATING SUPPORT -->
+  <a href="https://wa.me/233535262102" target="_blank" class="floating-support">💬</a>
+
+  <script src="script.js"></script>
+</body>
+</html>
